@@ -1,7 +1,12 @@
+import 'package:banking/pages/HomePage.dart';
 import 'package:banking/secure/forgot_password.dart';
 import 'package:banking/secure/signup_page.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart'; // ✅ Firebase Auth
+import 'package:provider/provider.dart';
 import '../constants/colors.dart';
+import '../states/user_provider.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -15,6 +20,7 @@ class _LoginPageState extends State<LoginPage> {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   bool _isPasswordVisible = false;
+  bool _isLoading = false;
 
   @override
   void dispose() {
@@ -23,9 +29,48 @@ class _LoginPageState extends State<LoginPage> {
     super.dispose();
   }
 
+  Future<void> _loginUser() async {
+    try {
+      final email = _emailController.text.trim();
+      final password = _passwordController.text.trim();
+
+      // 1. Sign in with Firebase Auth
+      UserCredential userCredential = await FirebaseAuth.instance
+          .signInWithEmailAndPassword(email: email, password: password);
+
+      // 2. Get user ID
+      String uid = userCredential.user!.uid;
+
+      // 3. Fetch user document from Firestore
+      DocumentSnapshot userDoc = await FirebaseFirestore.instance
+          .collection("users")
+          .doc(uid)
+          .get();
+
+      if (userDoc.exists) {
+        String name = userDoc["name"];
+
+        // 4. Save name in Provider
+        Provider.of<UserProvider>(context, listen: false).setName(name);
+      }
+
+      // 5. Navigate to homepage
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => const Homepage()),
+      );
+    } on FirebaseAuthException catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Login failed: ${e.message}")),
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Error: $e")),
+      );
+    }
+  }
   @override
   Widget build(BuildContext context) {
-    // ✅ Move MediaQuery here (inside build)
     final double screenWidth = MediaQuery.of(context).size.width;
 
     return Scaffold(
@@ -81,13 +126,13 @@ class _LoginPageState extends State<LoginPage> {
                       Center(
                         child: Image.asset(
                           "assets/images/lock.png",
-                          width: screenWidth * 0.4, // responsive image
+                          width: screenWidth * 0.4,
                           fit: BoxFit.cover,
                         ),
                       ),
                       const SizedBox(height: 30),
                       Padding(
-                        padding: const EdgeInsets.only(left: 8.0, right: 8.0),
+                        padding: const EdgeInsets.symmetric(horizontal: 8.0),
                         child: Form(
                           key: _formKey,
                           child: Column(
@@ -96,7 +141,6 @@ class _LoginPageState extends State<LoginPage> {
                               TextFormField(
                                 controller: _emailController,
                                 textInputAction: TextInputAction.next,
-                                autofillHints: const [AutofillHints.email],
                                 decoration: InputDecoration(
                                   labelText: 'Email',
                                   hintText: 'Enter your email',
@@ -109,10 +153,9 @@ class _LoginPageState extends State<LoginPage> {
                                   if (value == null || value.isEmpty) {
                                     return 'Please enter your email';
                                   }
-                                  if (!RegExp(
-                                    r'^[^@]+@[^@]+\.[^@]+',
-                                  ).hasMatch(value)) {
-                                    return 'Please enter a valid email address';
+                                  if (!RegExp(r'^[^@]+@[^@]+\.[^@]+')
+                                      .hasMatch(value)) {
+                                    return 'Enter a valid email';
                                   }
                                   return null;
                                 },
@@ -125,7 +168,6 @@ class _LoginPageState extends State<LoginPage> {
                                 controller: _passwordController,
                                 obscureText: !_isPasswordVisible,
                                 obscuringCharacter: '*',
-                                autofillHints: const [AutofillHints.password],
                                 decoration: InputDecoration(
                                   labelText: 'Password',
                                   hintText: 'Enter your password',
@@ -142,7 +184,7 @@ class _LoginPageState extends State<LoginPage> {
                                     onPressed: () {
                                       setState(() {
                                         _isPasswordVisible =
-                                            !_isPasswordVisible;
+                                        !_isPasswordVisible;
                                       });
                                     },
                                   ),
@@ -153,7 +195,6 @@ class _LoginPageState extends State<LoginPage> {
                                   }
                                   return null;
                                 },
-                                keyboardType: TextInputType.visiblePassword,
                               ),
 
                               // Forgot Password
@@ -166,7 +207,7 @@ class _LoginPageState extends State<LoginPage> {
                                         context,
                                         MaterialPageRoute(
                                           builder: (context) =>
-                                              ForgotPassword(),
+                                          const ForgotPassword(),
                                         ),
                                       );
                                     },
@@ -175,27 +216,30 @@ class _LoginPageState extends State<LoginPage> {
                                 ],
                               ),
 
-                              // Sign In Button (responsive)
+                              // Sign In Button
                               SizedBox(
                                 width: double.infinity,
                                 child: ElevatedButton(
                                   style: ElevatedButton.styleFrom(
                                     backgroundColor: AppColor.bb,
-                                    minimumSize: const Size(
-                                      double.infinity,
-                                      48,
-                                    ), // good size
+                                    minimumSize:
+                                    const Size(double.infinity, 48),
                                   ),
-                                  onPressed: () {},
-                                  child: const Text(
+                                  onPressed: _isLoading ? null : _loginUser,
+                                  child: _isLoading
+                                      ? const CircularProgressIndicator(
+                                    color: Colors.white,
+                                  )
+                                      : const Text(
                                     "Sign In",
                                     style: TextStyle(color: Colors.white),
                                   ),
                                 ),
                               ),
+
                               const SizedBox(height: 16),
 
-                              // Fingerprint (responsive size)
+                              // Fingerprint
                               CircleAvatar(
                                 radius: screenWidth * 0.08,
                                 backgroundColor: Colors.grey.shade200,
@@ -216,17 +260,19 @@ class _LoginPageState extends State<LoginPage> {
                                   Navigator.pushReplacement(
                                     context,
                                     MaterialPageRoute(
-                                      builder: (context) => SignupPage(),
+                                      builder: (context) =>
+                                      const SignupPage(),
                                     ),
                                   );
                                 },
                                 child: Text.rich(
                                   TextSpan(
                                     text: "Don't have an account? ",
-                                    style: const TextStyle(color: Colors.black),
+                                    style:
+                                    const TextStyle(color: Colors.black),
                                     children: [
                                       TextSpan(
-                                        text: "Sign In",
+                                        text: "Sign Up",
                                         style: TextStyle(
                                           color: AppColor.bb,
                                           fontWeight: FontWeight.bold,

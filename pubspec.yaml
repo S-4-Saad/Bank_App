@@ -16,12 +16,27 @@ dependencies:
 
 
   cupertino_icons: ^1.0.8
+  provider: ^6.1.2
+  # Firebase core
+  firebase_core: ^3.7.0
+  # Firebase authentication
+  firebase_auth: ^5.3.1
+
+  # Firestore (for storing user info like name, phone, etc.)
+  cloud_firestore: ^5.6.12
+
+  # Optional: Google sign-in (if needed later)
+  google_sign_in: ^6.3.0
+
+  # UI helpers (optional, for toast/snackbar)
+  fluttertoast: ^8.2.2
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
 
   flutter_lints: ^5.0.0
+
 
 
 flutter:

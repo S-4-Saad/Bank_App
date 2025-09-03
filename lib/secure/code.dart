@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+
+import '../states/user_provider.dart';
 
 class Code extends StatefulWidget {
   const Code({super.key});
-
 
   @override
   State<Code> createState() => _CodeState();
@@ -97,7 +99,7 @@ class _CodeState extends State<Code> {
                           child: ElevatedButton(
                             style: ElevatedButton.styleFrom(
                               backgroundColor: Colors.blue,
-                              minimumSize: const Size(0, 56), // match field height
+                              minimumSize: const Size(0, 56),
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(18),
                               ),
@@ -120,8 +122,20 @@ class _CodeState extends State<Code> {
                       ],
                     ),
                   ),
-                  const SizedBox(height: 12,),
-                  Text("Code is sent to your phone number ")
+                  const SizedBox(height: 12),
+
+                  // Use Consumer to rebuild only this Text when phone number changes
+                  Consumer<UserProvider>(
+                    builder: (context, userProvider, child) {
+                      return Text(
+                        "Code is sent to your phone number ${userProvider.phoneNumber ?? ''}",
+                        style: const TextStyle(
+                          fontWeight: FontWeight.w500,
+                          color: Colors.grey,
+                        ),
+                      );
+                    },
+                  ),
                 ],
               ),
             ),

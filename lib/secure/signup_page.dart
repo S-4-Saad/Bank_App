@@ -1,6 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:banking/constants/colors.dart';
+import 'package:provider/provider.dart';
+import '../pages/HomePage.dart';
+import '../states/user_provider.dart';
 import 'login_page.dart';
+
+// Firebase imports
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class SignupPage extends StatefulWidget {
   const SignupPage({super.key});
@@ -17,6 +24,7 @@ class _SignupPageState extends State<SignupPage> {
 
   bool _isPasswordVisible = false;
   bool _agreedToTerms = false;
+  bool _isLoading = false;
 
   @override
   void dispose() {
@@ -24,6 +32,59 @@ class _SignupPageState extends State<SignupPage> {
     _passwordController.dispose();
     _nameController.dispose();
     super.dispose();
+  }
+
+  Future<void> _signUp() async {
+    setState(() => _isLoading = true);
+
+    try {
+      final email = _emailController.text.trim();
+      final password = _passwordController.text.trim();
+      final name = _nameController.text.trim();
+
+      // 1. Create user with Firebase Auth
+      UserCredential userCredential =
+      await FirebaseAuth.instance.createUserWithEmailAndPassword(
+        email: email,
+        password: password,
+      );
+
+      // 2. Save user data to Firestore
+      await FirebaseFirestore.instance
+          .collection("users")
+          .doc(userCredential.user!.uid)
+          .set({
+        "name": name,
+        "email": email,
+        "createdAt": DateTime.now(),
+      });
+
+      // 3. Save name to Provider
+      Provider.of<UserProvider>(context, listen: false).setName(name);
+
+      // 4. Navigate to homepage instead of login
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => const Homepage()),
+      );
+    } on FirebaseAuthException catch (e) {
+      String errorMessage = "Signup failed";
+      if (e.code == 'email-already-in-use') {
+        errorMessage = "Email already in use.";
+      } else if (e.code == 'weak-password') {
+        errorMessage = "Password is too weak.";
+      }
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(errorMessage)),
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Error: $e")),
+      );
+    } finally {
+      setState(() => _isLoading = false);
+    }
   }
 
   @override
@@ -50,8 +111,7 @@ class _SignupPageState extends State<SignupPage> {
           color: AppColor.bb,
           child: SingleChildScrollView(
             padding: EdgeInsets.only(
-              bottom: MediaQuery.of(context).viewInsets.bottom ,
-
+              bottom: MediaQuery.of(context).viewInsets.bottom,
             ),
             child: Column(
               children: [
@@ -216,16 +276,19 @@ class _SignupPageState extends State<SignupPage> {
                                   if (!_agreedToTerms) {
                                     ScaffoldMessenger.of(context).showSnackBar(
                                       const SnackBar(
-                                        content: Text(
-                                            "You must agree to terms and policies"),
+                                        content: Text("You must agree to terms and policies"),
                                       ),
                                     );
                                   } else {
-                                    // Handle signup logic
+                                    _signUp();
                                   }
                                 }
                               },
-                              child: const Text(
+                              child: _isLoading
+                                  ? const CircularProgressIndicator(
+                                color: Colors.white,
+                              )
+                                  : const Text(
                                 "Sign Up",
                                 style: TextStyle(color: Colors.white),
                               ),

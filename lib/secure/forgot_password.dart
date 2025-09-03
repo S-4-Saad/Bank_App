@@ -1,6 +1,9 @@
 import 'package:banking/constants/colors.dart';
 import 'package:banking/secure/code.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+
+import '../states/user_provider.dart';
 
 class ForgotPassword extends StatefulWidget {
   const ForgotPassword({super.key});
@@ -13,6 +16,7 @@ class _ForgotPasswordState extends State<ForgotPassword> {
   final _formKey = GlobalKey<FormState>();
   final TextEditingController _phoneNumber = TextEditingController();
   String? PhoneNumber;
+
   @override
   void dispose() {
     _phoneNumber.dispose();
@@ -23,9 +27,10 @@ class _ForgotPasswordState extends State<ForgotPassword> {
   Widget build(BuildContext context) {
     final double screenWidth = MediaQuery.of(context).size.width;
     final double screenHeight = MediaQuery.of(context).size.height;
+
     return Scaffold(
       appBar: AppBar(
-        title: Text(
+        title: const Text(
           "Forgot Password",
           style: TextStyle(fontWeight: FontWeight.bold),
         ),
@@ -46,14 +51,13 @@ class _ForgotPasswordState extends State<ForgotPassword> {
                   ),
                 ],
               ),
-
-              height: screenHeight * 0.3,
+              height: screenHeight * 0.35,
               width: screenWidth * 0.9,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Padding(
-                    padding: const EdgeInsets.only(left: 18.0, top: 8),
+                  const Padding(
+                    padding: EdgeInsets.only(left: 18.0, top: 8),
                     child: Text(
                       "Type your registered number",
                       style: TextStyle(
@@ -78,27 +82,20 @@ class _ForgotPasswordState extends State<ForgotPassword> {
                             borderRadius: BorderRadius.circular(10.0),
                           ),
                         ),
+                        keyboardType: TextInputType.phone,
                         validator: (value) {
                           if (value == null || value.isEmpty) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text("Enter Phone Number"),
-                              ),
-                            );
-                          } else {
-                            // Store the phone number in the variable
-                            PhoneNumber = value;
+                            return "Please enter your phone number";
                           }
                           return null;
                         },
-                        keyboardType: TextInputType.phone,
                       ),
                     ),
                   ),
                   const SizedBox(height: 16),
-                  Center(
+                  const Center(
                     child: Text(
-                      "We sent you an OTP",
+                      "We will send you an OTP on your number",
                       style: TextStyle(
                         color: Colors.blue,
                         fontWeight: FontWeight.w600,
@@ -111,12 +108,22 @@ class _ForgotPasswordState extends State<ForgotPassword> {
                       style: ElevatedButton.styleFrom(
                         backgroundColor: AppColor.bb,
                         foregroundColor: Colors.white,
-                        elevation: 10
+                        elevation: 10,
                       ),
                       onPressed: () {
-                        Navigator.push(context, MaterialPageRoute(builder: (context)=>Code()));
+                        if (_formKey.currentState!.validate()) {
+                          // Save phone number in Provider
+                          Provider.of<UserProvider>(context, listen: false)
+                              .setPhoneNumber(_phoneNumber.text);
+
+                          // Navigate
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(builder: (context) => const Code()),
+                          );
+                        }
                       },
-                      child: Text("Send"),
+                      child: const Text("Send"),
                     ),
                   ),
                 ],
