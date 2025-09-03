@@ -1,3 +1,4 @@
+import 'package:banking/secure/forgot_password.dart';
 import 'package:banking/secure/signup_page.dart';
 import 'package:flutter/material.dart';
 import '../constants/colors.dart';
@@ -160,7 +161,15 @@ class _LoginPageState extends State<LoginPage> {
                                 mainAxisAlignment: MainAxisAlignment.end,
                                 children: [
                                   TextButton(
-                                    onPressed: () {},
+                                    onPressed: () {
+                                      Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (context) =>
+                                              ForgotPassword(),
+                                        ),
+                                      );
+                                    },
                                     child: const Text("Forgot Password?"),
                                   ),
                                 ],
