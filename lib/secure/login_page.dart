@@ -1,3 +1,4 @@
+import 'package:banking/secure/signup_page.dart';
 import 'package:flutter/material.dart';
 import '../constants/colors.dart';
 
@@ -85,7 +86,7 @@ class _LoginPageState extends State<LoginPage> {
                       ),
                       const SizedBox(height: 30),
                       Padding(
-                        padding: const EdgeInsets.only(left: 8.0,right: 8.0),
+                        padding: const EdgeInsets.only(left: 8.0, right: 8.0),
                         child: Form(
                           key: _formKey,
                           child: Column(
@@ -107,8 +108,9 @@ class _LoginPageState extends State<LoginPage> {
                                   if (value == null || value.isEmpty) {
                                     return 'Please enter your email';
                                   }
-                                  if (!RegExp(r'^[^@]+@[^@]+\.[^@]+')
-                                      .hasMatch(value)) {
+                                  if (!RegExp(
+                                    r'^[^@]+@[^@]+\.[^@]+',
+                                  ).hasMatch(value)) {
                                     return 'Please enter a valid email address';
                                   }
                                   return null;
@@ -138,7 +140,8 @@ class _LoginPageState extends State<LoginPage> {
                                     ),
                                     onPressed: () {
                                       setState(() {
-                                        _isPasswordVisible = !_isPasswordVisible;
+                                        _isPasswordVisible =
+                                            !_isPasswordVisible;
                                       });
                                     },
                                   ),
@@ -169,8 +172,10 @@ class _LoginPageState extends State<LoginPage> {
                                 child: ElevatedButton(
                                   style: ElevatedButton.styleFrom(
                                     backgroundColor: AppColor.bb,
-                                    minimumSize:
-                                    const Size(double.infinity, 48), // good size
+                                    minimumSize: const Size(
+                                      double.infinity,
+                                      48,
+                                    ), // good size
                                   ),
                                   onPressed: () {},
                                   child: const Text(
@@ -187,7 +192,9 @@ class _LoginPageState extends State<LoginPage> {
                                 backgroundColor: Colors.grey.shade200,
                                 child: IconButton(
                                   onPressed: () {},
-                                  icon: Image.asset("assets/icons/fingerprint.png"),
+                                  icon: Image.asset(
+                                    "assets/icons/fingerprint.png",
+                                  ),
                                   iconSize: screenWidth * 0.06,
                                 ),
                               ),
@@ -196,14 +203,21 @@ class _LoginPageState extends State<LoginPage> {
 
                               // Sign Up
                               GestureDetector(
-                                onTap: () {},
+                                onTap: () {
+                                  Navigator.pushReplacement(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) => SignupPage(),
+                                    ),
+                                  );
+                                },
                                 child: Text.rich(
                                   TextSpan(
                                     text: "Don't have an account? ",
                                     style: const TextStyle(color: Colors.black),
                                     children: [
                                       TextSpan(
-                                        text: "Sign Up",
+                                        text: "Sign In",
                                         style: TextStyle(
                                           color: AppColor.bb,
                                           fontWeight: FontWeight.bold,

@@ -1,4 +1,4 @@
-import 'package:banking/secure/login_page.dart';
+import 'package:banking/secure/signup_page.dart';
 import 'package:flutter/material.dart';
 
 void main() {
@@ -14,7 +14,7 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'Paisa',
-      home: LoginPage(),
+      home: SignupPage(),
     );
   }
 }
